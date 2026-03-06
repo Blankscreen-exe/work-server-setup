@@ -1,0 +1,22 @@
+services:
+  n8n:
+    image: n8nio/n8n
+    container_name: n8n
+    environment:
+      - N8N_HOST=SERVER_IP
+      - N8N_PORT=5678
+      - WEBHOOK_URL=http://SERVER_IP/n8n/
+      - GENERIC_TIMEZONE=UTC
+    volumes:
+      - ./data:/home/node/.n8n
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.n8n.rule=PathPrefix(`/n8n`)"
+      - "traefik.http.routers.n8n.entrypoints=web"
+      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
+
+networks:
+  proxy:
+    external: true
