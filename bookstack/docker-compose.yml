@@ -1,0 +1,39 @@
+services:
+  bookstack:
+    image: lscr.io/linuxserver/bookstack
+    container_name: bookstack
+    environment:
+      - APP_URL=http://YOUR_SERVER_IP/bookstack
+      - DB_HOST=bookstack_db
+      - DB_USER=bookstack
+      - DB_PASS=bookstackpass
+      - DB_DATABASE=bookstackapp
+    volumes:
+      - ./data:/config
+    depends_on:
+      - bookstack_db
+    networks:
+      - proxy
+      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bookstack.rule=PathPrefix(`/bookstack`)"
+      - "traefik.http.routers.bookstack.entrypoints=web"
+
+  bookstack_db:
+    image: mariadb:11
+    container_name: bookstack_db
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpass
+      - MYSQL_DATABASE=bookstackapp
+      - MYSQL_USER=bookstack
+      - MYSQL_PASSWORD=bookstackpass
+    volumes:
+      - ./db:/var/lib/mysql
+    networks:
+      - internal
+
+networks:
+  proxy:
+    external: true
+  internal:
