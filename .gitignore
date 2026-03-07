@@ -1,0 +1,8 @@
+key-cloak/db/
+
+bookstack/db/
+bookstack/data/
+
+uptime-kuma/data/
+
+traefik/acme.json
