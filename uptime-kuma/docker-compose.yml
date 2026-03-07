@@ -2,14 +2,19 @@ services:
   uptime-kuma:
     image: louislam/uptime-kuma
     container_name: uptime-kuma
+    environment:
+      - UPTIME_KUMA_BASE_PATH=/uptime
     volumes:
       - ./data:/app/data
     networks:
       - proxy
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+
       - "traefik.http.routers.kuma.rule=PathPrefix(`/uptime`)"
       - "traefik.http.routers.kuma.entrypoints=web"
+
       - "traefik.http.services.kuma.loadbalancer.server.port=3001"
 
 networks:

@@ -1,9 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Server Status</title>
+  <style>
+    /* Use default serif font */
+    body {
+      font-family: serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .status-box {
+      background-color: #e7feff;
+      padding: 40px 60px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    .status-box:hover {
+      transform: translateY(-3px);
+    }
+
+    .status-box h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      color: #0f4c5c;
+    }
+  </style>
 </head>
 <body>
-  <h1>Server Is Healthy</h1>
+  <div class="status-box">
+    <h1>✅ Server Is Healthy</h1>
+  </div>
 </body>
 </html>
