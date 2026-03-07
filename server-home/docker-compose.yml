@@ -1,0 +1,24 @@
+services:
+  static:
+    image: nginx:alpine
+    container_name: static_site
+    restart: unless-stopped
+    volumes:
+      - ~/services/work-server-setup/server-home:/usr/share/nginx/html:ro
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+
+      # Option A: serve at / (recommended if this is the only "root" site)
+      - "traefik.http.routers.static.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.static.entrypoints=web"
+      - "traefik.http.services.static.loadbalancer.server.port=80"
+
+      # Optional: keep Traefik from hijacking other routers by giving it low priority
+      - "traefik.http.routers.static.priority=1"
+
+networks:
+  proxy:
+    external: true
