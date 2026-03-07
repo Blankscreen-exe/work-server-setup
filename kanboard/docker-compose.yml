@@ -1,0 +1,48 @@
+services:
+  kanboard-db:
+    image: mariadb:11
+    container_name: kanboard-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: change_this_root_password
+      MYSQL_DATABASE: kanboard
+      MYSQL_USER: kanboard
+      MYSQL_PASSWORD: change_this_password
+    volumes:
+      - ./db_data:/var/lib/mysql
+    networks:
+      - kanboard_internal
+
+  kanboard:
+    image: kanboard/kanboard:latest
+    container_name: kanboard
+    restart: unless-stopped
+    depends_on:
+      - kanboard-db
+    environment:
+      APPLICATION_URL: http://84.46.244.158/kanboard
+      URL_BASE: http://84.46.244.158/kanboard
+      DATABASE_URL: mysql://kanboard:change_this_password@kanboard-db/kanboard
+    volumes:
+      - ./data:/var/www/app/data
+      - ./plugins:/var/www/app/plugins
+    networks:
+      - kanboard_internal
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+
+      - "traefik.http.routers.kanboard.rule=PathPrefix(`/kanboard`) || PathPrefix(`/assets`)"
+      - "traefik.http.routers.kanboard.entrypoints=web"
+      - "traefik.http.routers.kanboard.middlewares=kanboard-strip"
+      - "traefik.http.routers.kanboard.priority=100"
+
+      - "traefik.http.middlewares.kanboard-strip.stripPrefix.prefixes=/kanboard"
+
+      - "traefik.http.services.kanboard.loadbalancer.server.port=80"
+
+networks:
+  kanboard_internal:
+  proxy:
+    external: true
