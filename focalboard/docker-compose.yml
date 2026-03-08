@@ -1,0 +1,31 @@
+services:
+  focalboard:
+    image: mattermost/focalboard
+    container_name: focalboard
+    ports:
+      - "8088:8000"
+    environment:
+      - FOCALBOARD_DB_TYPE=postgres
+      - FOCALBOARD_DB_CONFIG=postgres://focalboard:focalboard_secret@focalboard-db:5432/focalboard?sslmode=disable
+    volumes:
+      - ./data:/opt/focalboard/data
+    depends_on:
+      focalboard-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  focalboard-db:
+    image: postgres:16-alpine
+    container_name: focalboard-db
+    environment:
+      - POSTGRES_USER=focalboard
+      - POSTGRES_PASSWORD=focalboard_secret
+      - POSTGRES_DB=focalboard
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-ONLY", "pg_isready", "-U", "focalboard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
