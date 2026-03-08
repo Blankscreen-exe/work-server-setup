@@ -6,3 +6,5 @@ bookstack/data/
 uptime-kuma/data/
 
 traefik/acme.json
+
+.env

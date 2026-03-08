@@ -3,7 +3,7 @@ services:
     image: louislam/uptime-kuma
     container_name: uptime-kuma
     environment:
-      - UPTIME_KUMA_BASE_PATH=/uptime
+      - UPTIME_KUMA_BASE_PATH=${UPTIME_KUMA_BASE_PATH}
     volumes:
       - ./data:/app/data
     networks:

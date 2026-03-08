@@ -3,13 +3,13 @@ services:
     image: lscr.io/linuxserver/bookstack
     container_name: bookstack
     environment:
-      - APP_URL=http://84.46.244.158/bookstack
-      - APP_KEY=base64:dfCkAwf28wI9AuC7hHaYIdXs2Ftrvb/DABBuIxS8fCo=
-      - DB_HOST=bookstack_db
-      - DB_USERNAME=bookstack
-      - DB_PASSWORD=bookstackpass
-      - DB_DATABASE=bookstackapp
-      - WAIT_FOR_DB=true
+      - APP_URL=${APP_URL}
+      - APP_KEY=${APP_KEY}
+      - DB_HOST=${DB_HOST}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - WAIT_FOR_DB=${WAIT_FOR_DB}
     volumes:
       - ./data:/config
     depends_on:
@@ -32,10 +32,10 @@ services:
     image: mariadb:11
     container_name: bookstack_db
     environment:
-      - MYSQL_ROOT_PASSWORD=rootpass
-      - MYSQL_DATABASE=bookstackapp
-      - MYSQL_USER=bookstack
-      - MYSQL_PASSWORD=bookstackpass
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
       - ./db:/var/lib/mysql
     networks:

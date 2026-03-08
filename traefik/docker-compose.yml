@@ -18,7 +18,7 @@ services:
       - 'traefik.http.routers.traefik.rule=PathPrefix(`/dashboard`) || PathPrefix(`/api`)'
       - "traefik.http.routers.traefik.entrypoints=web"
       - "traefik.http.routers.traefik.service=api@internal"
-      - 'traefik.http.middlewares.traefik-auth.basicauth.users=admin:$$2y$$05$$E8rd1Qv3V.6IKyiiZ2bJBOWO0aE40HEJ4OYCD6L3kX/rLhtfeEm6K'
+      - 'traefik.http.middlewares.traefik-auth.basicauth.users=admin:${TRAEFIK_AUTH_HASH}'
       - "traefik.http.routers.traefik.middlewares=traefik-auth"
     networks:
       - proxy

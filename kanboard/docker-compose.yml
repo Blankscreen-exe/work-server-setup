@@ -4,10 +4,10 @@ services:
     container_name: kanboard-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: change_this_root_password
-      MYSQL_DATABASE: kanboard
-      MYSQL_USER: kanboard
-      MYSQL_PASSWORD: change_this_password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - ./db_data:/var/lib/mysql
     networks:
@@ -20,9 +20,9 @@ services:
     depends_on:
       - kanboard-db
     environment:
-      APPLICATION_URL: http://84.46.244.158/kanboard
-      URL_BASE: http://84.46.244.158/kanboard
-      DATABASE_URL: mysql://kanboard:change_this_password@kanboard-db/kanboard
+      APPLICATION_URL: ${APPLICATION_URL}
+      URL_BASE: ${URL_BASE}
+      DATABASE_URL: ${DATABASE_URL}
     volumes:
       - ./data:/var/www/app/data
       - ./plugins:/var/www/app/plugins

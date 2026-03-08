@@ -3,10 +3,10 @@ services:
     image: n8nio/n8n
     container_name: n8n
     environment:
-      - N8N_HOST=SERVER_IP
-      - N8N_PORT=5678
-      - WEBHOOK_URL=http://SERVER_IP/n8n/
-      - GENERIC_TIMEZONE=UTC
+      - N8N_HOST=${N8N_HOST}
+      - N8N_PORT=${N8N_PORT}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
     volumes:
       - ./data:/home/node/.n8n
     networks:
