@@ -23,6 +23,8 @@ services:
       APPLICATION_URL: ${APPLICATION_URL}
       URL_BASE: ${URL_BASE}
       DATABASE_URL: ${DATABASE_URL}
+    ports:
+      - "${KB_PORT:-8021}:80"
     volumes:
       - ./data:/var/www/app/data
       - ./plugins:/var/www/app/plugins
