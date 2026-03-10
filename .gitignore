@@ -8,3 +8,5 @@ uptime-kuma/data/
 traefik/acme.json
 
 .env
+
+misc/
