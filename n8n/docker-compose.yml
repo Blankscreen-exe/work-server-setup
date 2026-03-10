@@ -8,7 +8,7 @@ services:
       - WEBHOOK_URL=${WEBHOOK_URL}
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
     volumes:
-      - ./data:/home/node/.n8n
+      - n8n_data:/home/node/.n8n
     networks:
       - proxy
     labels:
@@ -16,6 +16,9 @@ services:
       - "traefik.http.routers.n8n.rule=PathPrefix(`/n8n`)"
       - "traefik.http.routers.n8n.entrypoints=web"
       - "traefik.http.services.n8n.loadbalancer.server.port=5678"
+
+volumes:
+  n8n_data:
 
 networks:
   proxy:
