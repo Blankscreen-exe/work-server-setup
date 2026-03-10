@@ -4,9 +4,7 @@ services:
     container_name: n8n
     environment:
       - N8N_HOST=${N8N_HOST}
-      - N8N_PORT=${N8N_PORT}
-      - N8N_PATH=/n8n/
-      - N8N_EDITOR_BASE_URL=http://${N8N_HOST}/n8n/
+      - N8N_PORT=5678
       - WEBHOOK_URL=${WEBHOOK_URL}
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
     ports:
@@ -15,11 +13,6 @@ services:
       - n8n_data:/home/node/.n8n
     networks:
       - proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.n8n.rule=PathPrefix(`/n8n`)"
-      - "traefik.http.routers.n8n.entrypoints=web"
-      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
 
 volumes:
   n8n_data:
