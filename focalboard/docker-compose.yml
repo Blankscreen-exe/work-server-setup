@@ -4,7 +4,7 @@ services:
     container_name: focalboard
     restart: unless-stopped
     ports: 
-      - "${FB_PORT:-8000}:8000"
+      - "${FB_PORT:-8020}:8000"
     environment: 
       - FOCALBOARD_PORT=8000
       - FOCALBOARD_DBTYPE=postgres
