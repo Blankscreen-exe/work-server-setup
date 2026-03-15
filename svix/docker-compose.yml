@@ -1,0 +1,95 @@
+services:
+  svix-server:
+    image: svix/svix-server:latest
+    container_name: svix-server
+    restart: unless-stopped
+    environment:
+      SVIX_DB_DSN: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@svix-pgbouncer/${POSTGRES_DB}"
+      SVIX_REDIS_DSN: "redis://svix-redis:6379"
+      SVIX_JWT_SECRET: "${SVIX_JWT_SECRET}"
+      SVIX_QUEUE_TYPE: "redis"
+      SVIX_CACHE_TYPE: "memory"
+    networks:
+      - svix
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.svix.rule=Host(`${SVIX_DOMAIN}`)"
+      - "traefik.http.routers.svix.entrypoints=websecure"
+      - "traefik.http.routers.svix.tls.certresolver=letsencrypt"
+      - "traefik.http.services.svix.loadbalancer.server.port=8071"
+      - "traefik.http.routers.svix-http.rule=Host(`${SVIX_DOMAIN}`)"
+      - "traefik.http.routers.svix-http.entrypoints=web"
+      - "traefik.http.middlewares.svix-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.svix-http.middlewares=svix-https-redirect"
+    depends_on:
+      svix-pgbouncer:
+        condition: service_healthy
+      svix-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8071/api/v1/health/"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  svix-postgres:
+    image: postgres:13.4
+    container_name: svix-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+    volumes:
+      - svix-postgres-data:/var/lib/postgresql/data
+    networks:
+      - svix
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+  svix-pgbouncer:
+    image: edoburu/pgbouncer:1.15.0
+    container_name: svix-pgbouncer
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@svix-postgres/${POSTGRES_DB}"
+      MAX_CLIENT_CONN: 500
+    networks:
+      - svix
+    depends_on:
+      svix-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 6432"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+  svix-redis:
+    image: redis:7-alpine
+    container_name: svix-redis
+    restart: unless-stopped
+    command: redis-server --save 60 500 --appendonly yes --appendfsync everysec
+    volumes:
+      - svix-redis-data:/data
+    networks:
+      - svix
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  svix-postgres-data:
+  svix-redis-data:
+
+networks:
+  proxy:
+    external: true
+  svix:
