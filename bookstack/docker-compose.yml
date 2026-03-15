@@ -20,13 +20,14 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-
-      - "traefik.http.routers.bookstack.middlewares=bookstack-strip"
-      - "traefik.http.middlewares.bookstack-strip.stripprefix.prefixes=/bookstack"
-
-      - "traefik.http.routers.bookstack.rule=PathPrefix(`/bookstack`)"
-      - "traefik.http.routers.bookstack.entrypoints=web"
+      - "traefik.http.routers.bookstack.rule=Host(`${BOOKSTACK_DOMAIN}`)"
+      - "traefik.http.routers.bookstack.entrypoints=websecure"
+      - "traefik.http.routers.bookstack.tls.certresolver=letsencrypt"
       - "traefik.http.services.bookstack.loadbalancer.server.port=80"
+      - "traefik.http.routers.bookstack-http.rule=Host(`${BOOKSTACK_DOMAIN}`)"
+      - "traefik.http.routers.bookstack-http.entrypoints=web"
+      - "traefik.http.middlewares.bookstack-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.bookstack-http.middlewares=bookstack-https-redirect"
 
   bookstack_db:
     image: mariadb:11
