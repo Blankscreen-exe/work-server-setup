@@ -1,0 +1,5 @@
+.env
+db/
+data/
+custom/
+client-custom/

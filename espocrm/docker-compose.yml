@@ -1,0 +1,106 @@
+services:
+  espocrm-db:
+    image: mariadb:11
+    container_name: espocrm_db
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - ./db:/var/lib/mysql
+    networks:
+      - internal
+
+  espocrm:
+    image: espocrm/espocrm:10.0.7-apache
+    container_name: espocrm
+    restart: unless-stopped
+    depends_on:
+      - espocrm-db
+    environment:
+      ESPOCRM_DATABASE_PLATFORM: Mysql
+      ESPOCRM_DATABASE_HOST: espocrm-db
+      ESPOCRM_DATABASE_NAME: ${MYSQL_DATABASE}
+      ESPOCRM_DATABASE_USER: ${MYSQL_USER}
+      ESPOCRM_DATABASE_PASSWORD: ${MYSQL_PASSWORD}
+      ESPOCRM_ADMIN_USERNAME: ${ESPOCRM_ADMIN_USERNAME}
+      ESPOCRM_ADMIN_PASSWORD: ${ESPOCRM_ADMIN_PASSWORD}
+      ESPOCRM_SITE_URL: https://${ESPOCRM_DOMAIN}
+      ESPOCRM_CONFIG_USE_WEB_SOCKET: "true"
+      ESPOCRM_CONFIG_WEB_SOCKET_URL: wss://${ESPOCRM_DOMAIN}/wss
+      ESPOCRM_CONFIG_WEB_SOCKET_ZERO_M_Q_SUBMISSION_DSN: tcp://espocrm-websocket:7777
+      ESPOCRM_CONFIG_SMTP_SERVER: ${SMTP_SERVER}
+      ESPOCRM_CONFIG_SMTP_PORT: ${SMTP_PORT}
+      ESPOCRM_CONFIG_SMTP_AUTH: "true"
+      ESPOCRM_CONFIG_SMTP_SECURITY: TLS
+      ESPOCRM_CONFIG_SMTP_USERNAME: ${SMTP_USERNAME}
+      ESPOCRM_CONFIG_SMTP_PASSWORD: ${SMTP_PASSWORD}
+      ESPOCRM_CONFIG_OUTBOUND_EMAIL_FROM_ADDRESS: ${SMTP_USERNAME}
+      ESPOCRM_CONFIG_OUTBOUND_EMAIL_FROM_NAME: ${OUTBOUND_FROM_NAME}
+    volumes:
+      - ./data:/var/www/html/data
+      - ./custom:/var/www/html/custom
+      - ./client-custom:/var/www/html/client/custom
+    networks:
+      - proxy
+      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.espocrm.rule=Host(`${ESPOCRM_DOMAIN}`)"
+      - "traefik.http.routers.espocrm.entrypoints=websecure"
+      - "traefik.http.routers.espocrm.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.espocrm.service=espocrm"
+      - "traefik.http.services.espocrm.loadbalancer.server.port=80"
+      - "traefik.http.routers.espocrm-http.rule=Host(`${ESPOCRM_DOMAIN}`)"
+      - "traefik.http.routers.espocrm-http.entrypoints=web"
+      - "traefik.http.middlewares.espocrm-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.espocrm-http.middlewares=espocrm-https"
+
+  espocrm-daemon:
+    image: espocrm/espocrm:10.0.7-apache
+    container_name: espocrm_daemon
+    restart: unless-stopped
+    depends_on:
+      - espocrm
+    entrypoint: docker-daemon.sh
+    volumes:
+      - ./data:/var/www/html/data
+      - ./custom:/var/www/html/custom
+      - ./client-custom:/var/www/html/client/custom
+    networks:
+      - internal
+
+  espocrm-websocket:
+    image: espocrm/espocrm:10.0.7-apache
+    container_name: espocrm_websocket
+    restart: unless-stopped
+    depends_on:
+      - espocrm
+    entrypoint: docker-websocket.sh
+    environment:
+      ESPOCRM_CONFIG_WEB_SOCKET_ZERO_M_Q_SUBSCRIBER_DSN: tcp://*:7777
+    volumes:
+      - ./data:/var/www/html/data
+      - ./custom:/var/www/html/custom
+      - ./client-custom:/var/www/html/client/custom
+    networks:
+      - proxy
+      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.espocrm-ws.rule=Host(`${ESPOCRM_DOMAIN}`) && PathPrefix(`/wss`)"
+      - "traefik.http.routers.espocrm-ws.entrypoints=websecure"
+      - "traefik.http.routers.espocrm-ws.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.espocrm-ws.service=espocrm-ws"
+      - "traefik.http.services.espocrm-ws.loadbalancer.server.port=8080"
+
+networks:
+  proxy:
+    external: true
+  internal:
+    driver: bridge
