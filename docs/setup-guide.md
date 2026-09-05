@@ -24,7 +24,7 @@ Internet
         ├── bookstack.dev-in-trenches.com  → BookStack
         ├── n8n-internal.dev-in-trenches.com → N8N
         ├── taiga.dev-in-trenches.com      → Taiga
-        ├── svix.dev-in-trenches.com       → Svix
+        ├── svix.graylining.com            → Svix
         ├── /auth                          → Keycloak
         ├── /uptime                        → Uptime Kuma
         └── /health                        → Server Home
@@ -231,7 +231,7 @@ Edit `.env`:
 
 | Variable | Description | How to generate |
 |---|---|---|
-| `SVIX_DOMAIN` | Subdomain for Svix | e.g. `svix.dev-in-trenches.com` |
+| `SVIX_DOMAIN` | Subdomain for Svix | e.g. `svix.graylining.com` |
 | `SVIX_JWT_SECRET` | API authentication secret | `openssl rand -base64 32` |
 | `POSTGRES_PASSWORD` | Database password | Choose a strong password |
 
