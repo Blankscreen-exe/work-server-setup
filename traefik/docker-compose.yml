@@ -2,7 +2,9 @@ services:
   traefik:
     image: traefik:v3.6
     container_name: traefik
+    restart: unless-stopped
     command:
+      - "--log.level=DEBUG"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
@@ -20,11 +22,23 @@ services:
       - letsencrypt:/letsencrypt
     labels:
       - "traefik.enable=true"
-      - 'traefik.http.routers.traefik.rule=PathPrefix(`/dashboard`) || PathPrefix(`/api`)'
-      - "traefik.http.routers.traefik.entrypoints=web"
+
+      # Dashboard over HTTPS, scoped to its own hostname
+      - 'traefik.http.routers.traefik.rule=Host(`traefik.graylining.com`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))'
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
       - "traefik.http.routers.traefik.service=api@internal"
-      - 'traefik.http.middlewares.traefik-auth.basicauth.users=admin:${TRAEFIK_AUTH_HASH}'
       - "traefik.http.routers.traefik.middlewares=traefik-auth"
+
+      # Plain HTTP on the same hostname redirects to HTTPS
+      - 'traefik.http.routers.traefik-http.rule=Host(`traefik.graylining.com`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))'
+      - "traefik.http.routers.traefik-http.entrypoints=web"
+      - "traefik.http.routers.traefik-http.middlewares=traefik-https"
+      - "traefik.http.middlewares.traefik-https.redirectscheme.scheme=https"
+
+      # Dashboard login
+      - 'traefik.http.middlewares.traefik-auth.basicauth.users=admin:${TRAEFIK_AUTH_HASH}'
+
     networks:
       - proxy
 

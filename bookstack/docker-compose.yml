@@ -2,6 +2,7 @@ services:
   bookstack:
     image: lscr.io/linuxserver/bookstack
     container_name: bookstack
+    restart: unless-stopped
     environment:
       - APP_URL=${APP_URL}
       - APP_KEY=${APP_KEY}
@@ -32,6 +33,7 @@ services:
   bookstack_db:
     image: mariadb:11
     container_name: bookstack_db
+    restart: unless-stopped
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}

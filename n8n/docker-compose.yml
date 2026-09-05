@@ -2,11 +2,18 @@ services:
   n8n:
     image: n8nio/n8n
     container_name: n8n
+    restart: unless-stopped
     environment:
       - N8N_HOST=${N8N_HOST}
       - N8N_PORT=5678
       - WEBHOOK_URL=${WEBHOOK_URL}
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      # The image ships no Python 3, so n8n logs a warning about its internal
+      # Python task runner on every start. This flag states the intent, but as
+      # of n8n 2.11.2 it does NOT suppress the warning - that is upstream bug
+      # n8n-io/n8n#24379. The warning is cosmetic; JavaScript nodes are fine.
+      # To actually run Python code nodes, deploy an external task runner.
+      - N8N_PYTHON_ENABLED=false
     volumes:
       - n8n_data:/home/node/.n8n
     networks:
