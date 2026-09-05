@@ -14,6 +14,13 @@ services:
       # n8n-io/n8n#24379. The warning is cosmetic; JavaScript nodes are fine.
       # To actually run Python code nodes, deploy an external task runner.
       - N8N_PYTHON_ENABLED=false
+      # n8n sits behind exactly one reverse proxy (Traefik). Without this,
+      # Express does not trust X-Forwarded-For, so express-rate-limit keys on
+      # Traefik's IP instead of the real client - meaning one abusive client
+      # rate-limits everyone, and it logs ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
+      # on every request. Safe here because n8n's port is not published, so
+      # Traefik is the only possible source of that header.
+      - N8N_PROXY_HOPS=1
       # Outgoing email - without these, password reset is impossible and the
       # only recovery is `n8n user-management:reset` from the CLI.
       - N8N_EMAIL_MODE=${N8N_EMAIL_MODE}
