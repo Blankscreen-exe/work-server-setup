@@ -21,8 +21,8 @@ Internet
   │
   └── Traefik (reverse proxy)
         │
-        ├── bookstack.dev-in-trenches.com  → BookStack
-        ├── n8n-internal.dev-in-trenches.com → N8N
+        ├── bookstack.graylining.com  → BookStack
+        ├── n8n-internal.graylining.com → N8N
         ├── taiga.dev-in-trenches.com      → Taiga
         ├── svix.graylining.com            → Svix
         ├── /auth                          → Keycloak
@@ -103,8 +103,8 @@ Edit `.env`:
 
 | Variable | Description | How to generate |
 |---|---|---|
-| `BOOKSTACK_DOMAIN` | Subdomain for BookStack | e.g. `bookstack.dev-in-trenches.com` |
-| `APP_URL` | Full application URL | `https://bookstack.dev-in-trenches.com` |
+| `BOOKSTACK_DOMAIN` | Subdomain for BookStack | e.g. `bookstack.graylining.com` |
+| `APP_URL` | Full application URL | `https://bookstack.graylining.com` |
 | `APP_KEY` | Laravel encryption key | `docker run -it --rm --entrypoint /bin/bash lscr.io/linuxserver/bookstack:latest appkey` |
 | `DB_PASSWORD` | Database password | Choose a strong password |
 | `MYSQL_ROOT_PASSWORD` | MariaDB root password | Choose a strong password |
@@ -118,7 +118,7 @@ docker compose up -d
 
 ### Verify
 
-- URL: `https://bookstack.dev-in-trenches.com`
+- URL: `https://bookstack.graylining.com`
 - Default login: `admin@admin.com` / `password`
 - **Change the default password immediately after first login**
 
@@ -142,7 +142,7 @@ Edit `.env`:
 
 | Variable | Description |
 |---|---|
-| `N8N_DOMAIN` | Subdomain for N8N (e.g. `n8n-internal.dev-in-trenches.com`) |
+| `N8N_DOMAIN` | Subdomain for N8N (e.g. `n8n-internal.graylining.com`) |
 | `N8N_HOST` | Same as `N8N_DOMAIN` |
 | `WEBHOOK_URL` | `https://<N8N_DOMAIN>/` |
 | `GENERIC_TIMEZONE` | Server timezone (e.g. `UTC`) |
@@ -155,7 +155,7 @@ docker compose up -d
 
 ### Verify
 
-- URL: `https://n8n-internal.dev-in-trenches.com`
+- URL: `https://n8n-internal.graylining.com`
 - First visit will prompt you to create an admin account
 
 ---
