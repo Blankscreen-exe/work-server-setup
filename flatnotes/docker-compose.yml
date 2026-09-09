@@ -1,0 +1,38 @@
+services:
+  flatnotes:
+    image: dockerbobw/flatnotes-enhanced:v1.14.2
+    container_name: flatnotes
+    restart: unless-stopped
+    environment:
+      - FLATNOTES_AUTH_TYPE=${FLATNOTES_AUTH_TYPE}
+      - FLATNOTES_USERNAME=${FLATNOTES_USERNAME}
+      - FLATNOTES_PASSWORD=${FLATNOTES_PASSWORD}
+      - FLATNOTES_SECRET_KEY=${FLATNOTES_SECRET_KEY}
+      - FLATNOTES_PATH=/data
+    volumes:
+      # Notes are plain markdown files here - back this directory up.
+      - ./data:/data
+    networks:
+      - proxy
+    # No healthcheck defined here on purpose: the image already ships its own
+    # (/healthcheck.sh) and it passes. Do not add one without verifying the
+    # command exists inside the image - Traefik drops unhealthy containers from
+    # its config entirely, so a health check that cannot run silently takes the
+    # service off the internet, with a symptom (default TLS cert, no router)
+    # that points nowhere near the cause.
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.flatnotes.rule=Host(`${FLATNOTES_DOMAIN}`)"
+      - "traefik.http.routers.flatnotes.entrypoints=websecure"
+      - "traefik.http.routers.flatnotes.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.flatnotes.service=flatnotes"
+      - "traefik.http.services.flatnotes.loadbalancer.server.port=8080"
+      - "traefik.http.routers.flatnotes-http.rule=Host(`${FLATNOTES_DOMAIN}`)"
+      - "traefik.http.routers.flatnotes-http.entrypoints=web"
+      - "traefik.http.middlewares.flatnotes-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.flatnotes-http.middlewares=flatnotes-https"
+
+networks:
+  proxy:
+    external: true
