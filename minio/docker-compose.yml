@@ -1,0 +1,52 @@
+services:
+  shared-minio:
+    # MinIO community edition was archived in April 2026 and its Docker Hub
+    # images were removed on 2026-09-11. This is the last published build on
+    # quay.io. It will receive no further security fixes - see README.md.
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z.hotfix.7aa24e772
+    container_name: shared-minio
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_API_CORS_ALLOW_ORIGIN=${CORS_ALLOW_ORIGIN}
+    volumes:
+      - ./data:/data
+    networks:
+      - proxy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    # `mc` is present in this exact image, and `mc ready local` exits 0 on a
+    # running server - verified 2026-09-15 in an isolated throwaway container
+    # before adding this. That check matters: Traefik drops unhealthy
+    # containers from its config, so a health check that cannot run takes
+    # storage offline with a symptom that points nowhere near the cause.
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    # Every name below is prefixed/unique on purpose: another stack's MinIO also
+    # sits on the proxy network, so a generic 'minio' service name or router
+    # name would collide with it (shared DNS alias, or Traefik routing).
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      # S3 API only. The web console (9001) is deliberately NOT routed.
+      - "traefik.http.routers.storage.rule=Host(`${STORAGE_DOMAIN}`)"
+      - "traefik.http.routers.storage.entrypoints=websecure"
+      - "traefik.http.routers.storage.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.storage.service=storage"
+      - "traefik.http.services.storage.loadbalancer.server.port=9000"
+      - "traefik.http.routers.storage-http.rule=Host(`${STORAGE_DOMAIN}`)"
+      - "traefik.http.routers.storage-http.entrypoints=web"
+      - "traefik.http.middlewares.storage-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.storage-http.middlewares=storage-https"
+
+networks:
+  proxy:
+    external: true

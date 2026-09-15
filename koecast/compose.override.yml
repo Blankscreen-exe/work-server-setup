@@ -1,0 +1,14 @@
+# Server-only - NOT part of the KoeCast repo.
+# A copy is kept in ~/work-server-setup/koecast/compose.override.yml so it can be
+# restored if this file is lost.
+#
+# docker compose merges this automatically. It adds the plain-HTTP router that
+# the repo's compose.yml does not define, so http:// redirects to https://
+# instead of returning Traefik's 404.
+services:
+  web:
+    labels:
+      - "traefik.http.routers.voicenote-web-http.rule=Host(`${APP_HOST}`)"
+      - "traefik.http.routers.voicenote-web-http.entrypoints=web"
+      - "traefik.http.routers.voicenote-web-http.middlewares=voicenote-web-https"
+      - "traefik.http.middlewares.voicenote-web-https.redirectscheme.scheme=https"
