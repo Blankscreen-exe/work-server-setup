@@ -1,0 +1,77 @@
+# IceHrm (gamonoid/icehrm) - built from the upstream clone at ~/icehrm.
+#
+# Their own compose bundles a MySQL and publishes a host port. This file
+# replaces it rather than overriding it: compose MERGES `ports` lists, so an
+# override could not have removed their published port, only added to it.
+# Here the database is the shared server in ../mysql and nothing is published -
+# Traefik is the only way in.
+services:
+  icehrm:
+    build:
+      context: ../../icehrm        # the upstream clone, kept pristine for git pull
+      dockerfile: Dockerfile
+    image: icehrm-app:local
+    container_name: icehrm-app
+    restart: unless-stopped
+    environment:
+      - APP_BASE_URL=${APP_BASE_URL}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - app_data:/var/www/html/app/data    # uploads and logs
+    networks:
+      - proxy
+      - mysql
+    deploy:
+      resources:
+        limits:
+          memory: 384m
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.icehrm.rule=Host(`${APP_HOST}`)"
+      - "traefik.http.routers.icehrm.entrypoints=websecure"
+      - "traefik.http.routers.icehrm.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.icehrm.service=icehrm"
+      - "traefik.http.services.icehrm.loadbalancer.server.port=8080"
+      - "traefik.http.routers.icehrm-http.rule=Host(`${APP_HOST}`)"
+      - "traefik.http.routers.icehrm-http.entrypoints=web"
+      - "traefik.http.middlewares.icehrm-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.icehrm-http.middlewares=icehrm-https"
+
+  icehrm-worker:
+    build:
+      context: ../../icehrm
+      dockerfile: Dockerfile-worker
+      args:
+        - EXE_ENV=prod
+    image: icehrm-worker:local
+    container_name: icehrm-worker
+    restart: unless-stopped
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - app_data:/var/www/html/app/data
+    depends_on:
+      - icehrm
+    networks:
+      - mysql                      # no proxy: it runs cron, it serves nothing
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+volumes:
+  app_data:
+    name: icehrm-app-data
+
+networks:
+  proxy:
+    external: true
+  mysql:
+    external: true

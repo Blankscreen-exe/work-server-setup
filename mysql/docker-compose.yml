@@ -1,0 +1,39 @@
+services:
+  mysql:
+    # Pinned. IceHrm's own stack is tested against 8.0.x; this is the newest
+    # 8.0 patch. Do not jump to 8.4/9.x without checking every app that uses it.
+    image: mysql:8.0.46
+    container_name: mysql
+    restart: unless-stopped
+    # 128M buffer pool under a 512M cap: this server
+    # has no swap, so MySQL is told its budget rather than discovering it.
+    command: ["--innodb-buffer-pool-size=128M", "--max-connections=100"]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      ICEHRM_DB_PASSWORD: ${ICEHRM_DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Runs ONCE, when the data volume is first created. Adding an app later
+      # means creating its database by hand too - see README.
+      - ./init:/docker-entrypoint-initdb.d
+    networks:
+      - mysql
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    # mysqladmin ships in this image; verified before this was added.
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    # Deliberately no ports: nothing outside this server reaches it.
+
+volumes:
+  mysql_data:
+
+networks:
+  mysql:
+    name: mysql
