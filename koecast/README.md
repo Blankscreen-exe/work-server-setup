@@ -1,7 +1,7 @@
 # KoeCast - server notes
 
 Live at **https://koecast.graylining.com**. The application lives in its own
-repository (`graylining/KoeCast-nextjs`, branch `develop`), cloned at
+repository (`graylining/KoeCast-nextjs`, branch `main`), cloned at
 `~/koecast`. **This folder is not the app** - it records what the server needs
 that the app's repository does not contain.
 
@@ -31,10 +31,22 @@ so the `buildx` plugin is installed for the `ubuntu` user at
 ## Deploying an update
 
 ```bash
-cd ~/koecast && git pull
-docker compose build
-docker compose up -d      # runs migrate first, then satellite, then worker and web
+cd ~/koecast
+git fetch origin && git checkout -B main origin/main
+docker compose build          # build BEFORE restarting: a failed build then leaves the running app alone
+docker compose up -d          # runs migrate first, then satellite, then worker and web
 ```
+
+Take a database backup first, before any deploy that carries migrations:
+
+```bash
+docker compose exec -T backup backup
+```
+
+Some releases need a one-off script afterwards - the 2026-10-07 deploy needed
+`docker compose run --rm -T --no-deps worker npm run handles:backfill` to give
+existing accounts a username. Check `web/package.json` for scripts whose
+description says "run once per database".
 
 🔴 Deploy the satellite **before** the worker, and roll back in the reverse order -
 see `docs/deployment.md` in the app repo.
