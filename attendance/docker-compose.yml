@@ -1,0 +1,52 @@
+# Attendance tool (Blankscreen-exe/attendance-tool), built from ~/attendance-tool.
+#
+# Written here rather than using the repo's own compose, for two reasons: that
+# one publishes port 8000 on the host, and compose MERGES `ports`, so an
+# override could only add to it, never remove it. It would also run a third
+# database container. This points at the central postgres in ../postgres.
+services:
+  attendance:
+    build:
+      context: ../../attendance-tool   # upstream clone, kept clean for git pull
+    image: attendance:local
+    container_name: attendance
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      # With DATABASE_URL pointing at postgres nothing important is written
+      # here, but the image creates and owns /app/data - keep it persistent so
+      # replacing the container never discards anything written to it.
+      - attendance_data:/app/data
+    networks:
+      - proxy
+      - postgres
+    deploy:
+      resources:
+        limits:
+          memory: 384m
+    # No healthcheck on purpose: the image declares none, and no health
+    # endpoint is known to exist. Traefik drops unhealthy containers from its
+    # configuration, so a guessed check would take the site offline with a
+    # symptom pointing nowhere near the cause.
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.attendance.rule=Host(`${ATTENDANCE_HOST}`)"
+      - "traefik.http.routers.attendance.entrypoints=websecure"
+      - "traefik.http.routers.attendance.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.attendance.service=attendance"
+      - "traefik.http.services.attendance.loadbalancer.server.port=8000"
+      - "traefik.http.routers.attendance-http.rule=Host(`${ATTENDANCE_HOST}`)"
+      - "traefik.http.routers.attendance-http.entrypoints=web"
+      - "traefik.http.middlewares.attendance-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.attendance-http.middlewares=attendance-https"
+
+volumes:
+  attendance_data:
+    name: attendance-data
+
+networks:
+  proxy:
+    external: true
+  postgres:
+    external: true
