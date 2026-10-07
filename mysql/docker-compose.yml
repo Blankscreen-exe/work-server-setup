@@ -10,7 +10,6 @@ services:
     command: ["--innodb-buffer-pool-size=128M", "--max-connections=100"]
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      ICEHRM_DB_PASSWORD: ${ICEHRM_DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
       # Runs ONCE, when the data volume is first created. Adding an app later
